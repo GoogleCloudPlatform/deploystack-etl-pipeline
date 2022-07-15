@@ -1,0 +1,7 @@
+# .tfstate and lock files
+*.tfstate
+*.tfstate.*
+*.lock.*
+
+# variables file
+terraform.tfvars
