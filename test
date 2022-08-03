@@ -1,0 +1,120 @@
+# DON'T REMOVE FROM test script.
+CYAN='\033[0;36m'
+BCYAN='\033[1;36m'
+NC='\033[0m' # No Color
+DIVIDER=$(printf %"$(tput cols)"s | tr " " "*")
+DIVIDER+="\n"
+
+function get_project_id() {
+    local __resultvar=$1
+    VALUE=$(gcloud config get-value project | xargs)
+    eval $__resultvar="'$VALUE'"
+}
+
+function get_project_number() {
+    local __resultvar=$1
+    local PRO=$2
+    VALUE=$(gcloud projects list --filter="project_id=$PRO" --format="value(PROJECT_NUMBER)" | xargs)
+    eval $__resultvar="'$VALUE'"
+}
+
+# DISPLAY HELPERS
+function section_open() {
+    section_description=$1
+    printf "$DIVIDER"
+    printf "${CYAN}$section_description${NC} \n"
+    printf "$DIVIDER"
+}
+
+function section_close() {
+    printf "$DIVIDER"
+    printf "${CYAN}$section_description ${BCYAN}- done${NC}\n"
+    printf "\n\n"
+}
+
+function evalTest() {
+    local command=$1
+    local expected=$2
+
+    local ERR=""
+    got=$(eval $command 2>errFile)
+    ERR=$(<errFile)
+
+    if [ ${#ERR} -gt 0 ]; then
+        if [ "$expected" = "EXPECTERROR" ]; then
+            printf "ok \n"
+            return
+        fi
+
+        printf "expecting no error, got error='$ERR'   \n"
+        exit 1
+    fi
+
+    if [ "$got" != "$expected" ]; then
+        printf "expecting: '$expected' got: '$got'  \n"
+        exit 1
+    fi
+
+    printf "$expected is ok\n"
+}
+# END DON'T REMOVE FROM test script.
+
+
+
+get_project_id PROJECT
+gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT
+get_project_number PROJECT_NUMBER $PROJECT
+REGION=us-central1
+ZONE=us-central1-c
+BASENAME=etlpipeline-tf
+
+gcloud config set project ${PROJECT}
+
+terraform init
+terraform apply -auto-approve -var project_id="${PROJECT}" -var project_number="${PROJECT_NUMBER}" -var region="${REGION}" -var basename="${BASENAME}" -var zone="${ZONE}"
+
+section_open "Testing Service Account creation"
+    evalTest 'gcloud iam service-accounts describe etlpipeline@$PROJECT.iam.gserviceaccount.com --format="value(name)"' "projects/$PROJECT/serviceAccounts/etlpipeline@$PROJECT.iam.gserviceaccount.com"
+section_close
+
+section_open "Testing Composer Agent v2 has appropriate roles"
+    evalTest 'gcloud projects get-iam-policy $PROJECT --flatten="bindings[].members" --filter="bindings.role=roles/composer.ServiceAgentV2Ext AND bindings.members=serviceAccount:service-$PROJECT_NUMBER@cloudcomposer-accounts.iam.gserviceaccount.com" --format="value(bindings.members)"' "serviceAccount:service-$PROJECT_NUMBER@cloudcomposer-accounts.iam.gserviceaccount.com"
+section_close
+
+section_open "Testing Composer environment exists"
+    evalTest 'gcloud composer environments describe example-environment --location $REGION --format="value(state)"' "RUNNING"
+section_close
+
+section_open "Testing BigQuery dataset exists"
+    evalTest 'bq ls | grep -w average_weather' "average_weather"
+section_close
+
+section_open "Testing BigQuery table exists"
+   
+section_close
+
+section_open "Testing for Cloud Storage bucket and input files"
+    evalTest 'gsutil ls | grep -w gs://$BASENAME-$PROJECT-files' "gs://$BASENAME-$PROJECT-files"
+    evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -w gs://$BASENAME-$PROJECT-files/inputFile.txt' "gs://etlpipeline-tf-terraform-etl-1-files/inputFile.txt"
+    evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -w gs://$BASENAME-$PROJECT-files/jsonSchema.json' "gs://etlpipeline-tf-terraform-etl-1-files/jsonSchema.json"
+    evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -w gs://$BASENAME-$PROJECT-files/transformCSVtoJSON.js' "gs://etlpipeline-tf-terraform-etl-1-files/transformCSVtoJSON.js"
+section_close
+
+section_open "Testing DAG file exists"
+    evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -w dags/composer-dataflow-dag.py' "dags/composer-dataflow-dag.py"
+section_close
+
+section_open "Testing Dataflow job completed"
+   
+section_close
+
+section_open "Testing BigQuery table populated"
+   
+section_close
+
+terraform destroy -auto-approve -var project_id="${PROJECT}" -var project_number="${PROJECT_NUMBER}" -var region="${REGION}" -var basename="${BASENAME}" -var zone="${ZONE}"
+
+printf "$DIVIDER"
+printf "CONGRATS!!!!!!! \n"
+printf "You got the end the of your test with everything working. \n"
+printf "$DIVIDER"

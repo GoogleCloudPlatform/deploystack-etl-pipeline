@@ -45,7 +45,7 @@ resource "google_project_service" "all" {
 resource "google_service_account" "etl" {
   account_id   = "etlpipeline"
   display_name = "ETL SA"
-  description  = "user-managed service account for and Dataflow"
+  description  = "user-managed service account for Composer and Dataflow"
   project = var.project_id
   depends_on = [google_project_service.all]
 }
