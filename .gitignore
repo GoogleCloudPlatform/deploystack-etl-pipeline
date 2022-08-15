@@ -10,3 +10,4 @@ terraform.tfvars
 
 # test notes files
 *test_commands*
+*errFile*
