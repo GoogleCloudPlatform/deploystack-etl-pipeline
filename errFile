@@ -1,1 +1,0 @@
-ERROR: (gcloud.iam.service-accounts.describe) PERMISSION_DENIED: Permission iam.serviceAccounts.get is required to perform this operation on service account projects/-/serviceAccounts/etlpipeline@terraform-etl-1.iam.gserviceaccount.com.
