@@ -70,49 +70,61 @@ BASENAME=etlpipeline-tf
 
 gcloud config set project ${PROJECT}
 
-terraform init
-terraform apply -auto-approve -var project_id="${PROJECT}" -var project_number="${PROJECT_NUMBER}" -var region="${REGION}" -var basename="${BASENAME}" -var zone="${ZONE}"
+# terraform init
+# terraform apply -auto-approve -var project_id="${PROJECT}" -var project_number="${PROJECT_NUMBER}" -var region="${REGION}" -var basename="${BASENAME}" -var zone="${ZONE}"
 
-section_open "Testing Service Account creation"
-    evalTest 'gcloud iam service-accounts describe etlpipeline@$PROJECT.iam.gserviceaccount.com --format="value(name)"' "projects/$PROJECT/serviceAccounts/etlpipeline@$PROJECT.iam.gserviceaccount.com"
-section_close
+# section_open "Testing Service Account creation"
+#     evalTest 'gcloud iam service-accounts describe etlpipeline@$PROJECT.iam.gserviceaccount.com --format="value(name)"' "projects/$PROJECT/serviceAccounts/etlpipeline@$PROJECT.iam.gserviceaccount.com"
+# section_close
 
-section_open "Testing Composer Agent v2 has appropriate roles"
-    evalTest 'gcloud projects get-iam-policy $PROJECT --flatten="bindings[].members" --filter="bindings.role=roles/composer.ServiceAgentV2Ext AND bindings.members=serviceAccount:service-$PROJECT_NUMBER@cloudcomposer-accounts.iam.gserviceaccount.com" --format="value(bindings.members)"' "serviceAccount:service-$PROJECT_NUMBER@cloudcomposer-accounts.iam.gserviceaccount.com"
-section_close
+# section_open "Testing Composer Agent v2 has appropriate roles"
+#     evalTest 'gcloud projects get-iam-policy $PROJECT --flatten="bindings[].members" --filter="bindings.role=roles/composer.ServiceAgentV2Ext AND bindings.members=serviceAccount:service-$PROJECT_NUMBER@cloudcomposer-accounts.iam.gserviceaccount.com" --format="value(bindings.members)"' "serviceAccount:service-$PROJECT_NUMBER@cloudcomposer-accounts.iam.gserviceaccount.com"
+# section_close
 
-section_open "Testing Composer environment exists"
-    evalTest 'gcloud composer environments describe example-environment --location $REGION --format="value(state)"' "RUNNING"
-section_close
+# section_open "Testing Composer environment exists"
+#     evalTest 'gcloud composer environments describe example-environment --location $REGION --format="value(state)"' "RUNNING"
+# section_close
 
-section_open "Testing BigQuery dataset exists"
-    evalTest 'bq ls | grep -w average_weather' "average_weather"
-section_close
+# section_open "Testing BigQuery dataset exists"
+#     evalTest 'bq ls | grep -c average_weather' "1"
+# section_close
 
-section_open "Testing BigQuery table exists"
-   
-section_close
+# section_open "Testing for Cloud Storage bucket and input files"
+#     evalTest 'gsutil ls | grep -c gs://$BASENAME-$PROJECT-files' "1"
+#     evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -c gs://$BASENAME-$PROJECT-files/inputFile.txt' "1"
+#     evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -c gs://$BASENAME-$PROJECT-files/jsonSchema.json' "1"
+#     evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -c gs://$BASENAME-$PROJECT-files/transformCSVtoJSON.js' "1"
+# section_close
 
-section_open "Testing for Cloud Storage bucket and input files"
-    evalTest 'gsutil ls | grep -w gs://$BASENAME-$PROJECT-files' "gs://$BASENAME-$PROJECT-files"
-    evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -w gs://$BASENAME-$PROJECT-files/inputFile.txt' "gs://etlpipeline-tf-terraform-etl-1-files/inputFile.txt"
-    evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -w gs://$BASENAME-$PROJECT-files/jsonSchema.json' "gs://etlpipeline-tf-terraform-etl-1-files/jsonSchema.json"
-    evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -w gs://$BASENAME-$PROJECT-files/transformCSVtoJSON.js' "gs://etlpipeline-tf-terraform-etl-1-files/transformCSVtoJSON.js"
-section_close
+# section_open "Testing DAG file exists"
+#     evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -c dags/composer-dataflow-dag.py' "1"
+# section_close
 
-section_open "Testing DAG file exists"
-    evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -w dags/composer-dataflow-dag.py' "dags/composer-dataflow-dag.py"
-section_close
-
-section_open "Testing Dataflow job completed"
-   
-section_close
+# section_open "Waiting 10m for pipeline to finish"
+#     sleep 10m
+# section_close
 
 section_open "Testing BigQuery table populated"
-   
+    evalTest 'bq --format=prettyjson show $PROJECT:average_weather.average_weather | grep numRows' '  "numRows": "4",'
 section_close
 
 terraform destroy -auto-approve -var project_id="${PROJECT}" -var project_number="${PROJECT_NUMBER}" -var region="${REGION}" -var basename="${BASENAME}" -var zone="${ZONE}"
+
+section_open "Testing Composer environment doesn't exist"
+    evalTest 'gcloud composer environments describe example-environment --location $REGION --format="value(state)"' "EXPECTERROR"
+section_close
+
+section_open "Testing BigQuery dataset doesn't exist"
+    evalTest 'bq ls | grep -c average_weather' "0"
+section_close
+
+section_open "Testing for Cloud Storage bucket doesn't exist"
+    evalTest 'gsutil ls | grep -c gs://$BASENAME-$PROJECT-files' "0"
+section_close
+
+section_open "Testing Service Account doesn't exist"
+    evalTest 'gcloud iam service-accounts describe etlpipeline@$PROJECT.iam.gserviceaccount.com --format="value(name)"' "EXPECTERROR"
+section_close
 
 printf "$DIVIDER"
 printf "CONGRATS!!!!!!! \n"
