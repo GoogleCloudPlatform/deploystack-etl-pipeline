@@ -3,7 +3,7 @@
 *.tfstate.*
 *.lock.*
 
-.terraform*
+.terraform
 
 # variables file
 terraform.tfvars

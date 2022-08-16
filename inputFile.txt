@@ -1,4 +1,0 @@
-POINT(40.7128 74.006),45,'July',null,true,2020-02-16
-POINT(41.8781 87.6298),23,'October',13,false,2015-02-13
-POINT(48.8566 2.3522),80,'December',null,true,null
-POINT(6.5244 3.3792),15,'March',14,true,null

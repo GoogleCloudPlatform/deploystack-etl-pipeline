@@ -1,3 +1,19 @@
+/**
+ * Copyright 2022 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 variable "project_id" {
     type = string
 }
@@ -167,19 +183,19 @@ resource "google_storage_bucket" "pipeline_files" {
 
 resource "google_storage_bucket_object" "json_schema" {
   name       = "jsonSchema.json"
-  source     = "./jsonSchema.json"
+  source     = "${path.module}/files/jsonSchema.json"
   bucket     = google_storage_bucket.pipeline_files.name
   depends_on = [google_storage_bucket.pipeline_files]
 }
 resource "google_storage_bucket_object" "input_file" {
   name       = "inputFile.txt"
-  source     = "./inputFile.txt"
+  source     = "${path.module}/files/inputFile.txt"
   bucket     = google_storage_bucket.pipeline_files.name
   depends_on = [google_storage_bucket.pipeline_files]
 }
 resource "google_storage_bucket_object" "transform_CSVtoJSON" {
   name       = "transformCSVtoJSON.js"
-  source     = "./transformCSVtoJSON.js"
+  source     = "${path.module}/files/transformCSVtoJSON.js"
   bucket     = google_storage_bucket.pipeline_files.name
   depends_on = [google_storage_bucket.pipeline_files]
 }
@@ -195,7 +211,7 @@ data "google_composer_environment" "example" {
 
 resource "google_storage_bucket_object" "dag_file" {
   name       = "dags/composer-dataflow-dag.py"
-  source     = "./composer-dataflow-dag.py"
+  source     = "${path.module}/files/composer-dataflow-dag.py"
   bucket     = replace(replace(data.google_composer_environment.example.config.0.dag_gcs_prefix, "gs://", ""),"/dags","")
   depends_on = [google_composer_environment.example, google_storage_bucket.pipeline_files, google_bigquery_table.weather_table]
 }
