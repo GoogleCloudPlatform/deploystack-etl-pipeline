@@ -101,7 +101,7 @@ section_open "Waiting 10m for pipeline to finish"
 section_close
 
 section_open "Testing DAG file exists"
-    evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -c dags/composer-dataflow-dag.py' "1"
+    evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -c dags/airflow_monitoring.py' "1"
 section_close
 
 section_open "Testing BigQuery table populated"
