@@ -52,7 +52,8 @@ section_open "Delete Composer environment"
 section_close
 
 section_open "Delete BigQuery dataset"
-    bq rm -f -t $PROJECT:average_weather.average_weather
+    bq rm -f -t average_weather.average_weather
+    bq rm -f -d average_weather
 section_close
 
 section_open "Delete for Cloud Storage bucket"
