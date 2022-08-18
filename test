@@ -57,6 +57,118 @@ function evalTest() {
 
     printf "$expected is ok\n"
 }
+
+function await_pipeline() {
+    local __resultvar=$1
+    local DURATION=$2
+    local limit=$3
+    local OP=$4
+    local NAME=$5
+    local REGION=$6
+    local DOMAIN=$5
+    local IP=$6
+
+    COMMAND="gcloud composer environments list --locations $REGION"
+    FORMAT="--format='value(state)'"
+    MESSAGE="Check to see if DAG file exists"
+    AWAITING="RUNNING"
+    NAME=""
+    ERROREXPECTED=false
+
+    ERROR=false
+    VALUE=$(eval $COMMAND $NAME $FORMAT) || ERROR=true
+
+    if [ "$ERROR" = true ]; then
+        if [ "$ERROREXPECTED" == true ]; then
+            printf "\n"
+            eval $__resultvar=""
+            return 1
+        fi
+        printf "Command to poll errored. Exiting\n"
+        return 1
+    fi
+
+    i=0
+    while [ "$VALUE" != "$AWAITING" ]; do
+        i=$(($i + 1))
+        if [ $i -eq 1 ]; then
+            printf "$MESSAGE"
+        fi
+
+        if [ $i -eq $limit ]; then
+            printf "Timed out \n"
+            return 1
+        fi
+
+        VALUE=$(eval $COMMAND $NAME $FORMAT) || ERROR=true
+
+        if [ "$ERROR" = true ]; then
+            printf "Command to poll errored. Exiting\n"
+            return 1
+        fi
+        printf "."
+        sleep $DURATION
+    done
+    # fi
+    printf "\n"
+    eval $__resultvar="'$VALUE'"
+}
+
+function await_bq() {
+    local __resultvar=$1
+    local DURATION=$2
+    local limit=$3
+    local OP=$4
+    local NAME=$5
+    local REGION=$6
+    local DOMAIN=$5
+    local IP=$6
+
+    COMMAND="bq --format=prettyjson show average_weather.average_weather | grep numRows"
+    FORMAT=""
+    MESSAGE="Check to see if BQ table has been populated"
+    AWAITING='  "numRows": "4",'
+    NAME=""
+    ERROREXPECTED=false
+
+    ERROR=false
+    VALUE=$(eval $COMMAND $NAME $FORMAT) || ERROR=true
+
+    if [ "$ERROR" = true ]; then
+        if [ "$ERROREXPECTED" == true ]; then
+            printf "\n"
+            eval $__resultvar=""
+            return 1
+        fi
+        printf "Command to poll errored. Exiting\n"
+        return 1
+    fi
+
+    i=0
+    while [ "$VALUE" != "$AWAITING" ]; do
+        i=$(($i + 1))
+        if [ $i -eq 1 ]; then
+            printf "$MESSAGE"
+        fi
+
+        if [ $i -eq $limit ]; then
+            printf "Timed out \n"
+            return 1
+        fi
+
+        VALUE=$(eval $COMMAND $NAME $FORMAT) || ERROR=true
+
+        if [ "$ERROR" = true ]; then
+            printf "Command to poll errored. Exiting\n"
+            return 1
+        fi
+        printf "."
+        sleep $DURATION
+    done
+    # fi
+    printf "\n"
+    eval $__resultvar="'$VALUE'"
+}
 # END DON'T REMOVE FROM test script.
 
 
@@ -96,15 +208,16 @@ section_open "Testing for Cloud Storage bucket and input files"
     evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -c gs://$BASENAME-$PROJECT-files/transformCSVtoJSON.js' "1"
 section_close
 
-# section_open "Waiting 10m for pipeline to finish"
-#     sleep 600
-# section_close
+section_open "Waiting for pipeline to finish"
+    await_pipeline TEMP 5 120 "dagExists" "" $REGION
+section_close
 
 section_open "Testing DAG file exists"
     evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -c dags/airflow_monitoring.py' "1"
 section_close
 
 section_open "Testing BigQuery table populated"
+    await_bq TEMP 5 120 "" "" 
     evalTest 'bq --format=prettyjson show average_weather.average_weather | grep numRows' '  "numRows": "4",'
 section_close
 
