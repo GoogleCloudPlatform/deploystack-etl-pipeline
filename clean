@@ -1,0 +1,70 @@
+# DON'T REMOVE FROM test script.
+CYAN='\033[0;36m'
+BCYAN='\033[1;36m'
+NC='\033[0m' # No Color
+DIVIDER=$(printf %"$(tput cols)"s | tr " " "*")
+DIVIDER+="\n"
+
+function get_project_id() {
+    local __resultvar=$1
+    VALUE=$(gcloud config get-value project | xargs)
+    eval $__resultvar="'$VALUE'"
+}
+
+function get_project_number() {
+    local __resultvar=$1
+    local PRO=$2
+    VALUE=$(gcloud projects list --filter="project_id=$PRO" --format="value(PROJECT_NUMBER)" | xargs)
+    eval $__resultvar="'$VALUE'"
+}
+
+# DISPLAY HELPERS
+function section_open() {
+    section_description=$1
+    printf "$DIVIDER"
+    printf "${CYAN}$section_description${NC} \n"
+    printf "$DIVIDER"
+}
+
+function section_close() {
+    printf "$DIVIDER"
+    printf "${CYAN}$section_description ${BCYAN}- done${NC}\n"
+    printf "\n\n"
+}
+
+# END DON'T REMOVE FROM test script.
+
+
+
+get_project_id PROJECT
+gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT
+get_project_number PROJECT_NUMBER $PROJECT
+REGION=us-central1
+ZONE=us-central1-c
+BASENAME=etlpipeline-tf
+
+gcloud config set project ${PROJECT}
+
+
+
+section_open "Delete Composer environment"
+    gcloud composer environments delete example-environment --location $REGION -q
+section_close
+
+section_open "Delete BigQuery dataset"
+    bq rm -f -t $PROJECT:average_weather.average_weather
+section_close
+
+section_open "Delete for Cloud Storage bucket"
+    gsutil rm -rf gs://$BASENAME-$PROJECT-files/*
+    gsutil rb  gs://$BASENAME-$PROJECT-files
+section_close
+
+section_open "Delete Service Account"
+    gcloud iam service-accounts delete etlpipeline@$PROJECT.iam.gserviceaccount.com -q
+section_close
+
+printf "$DIVIDER"
+printf "CONGRATS!!!!!!! \n"
+printf "Cleaned \n"
+printf "$DIVIDER"
