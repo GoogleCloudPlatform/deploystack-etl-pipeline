@@ -96,12 +96,12 @@ section_open "Testing for Cloud Storage bucket and input files"
     evalTest 'gsutil ls -r gs://$BASENAME-$PROJECT-files | grep -c gs://$BASENAME-$PROJECT-files/transformCSVtoJSON.js' "1"
 section_close
 
-section_open "Testing DAG file exists"
-    evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -c dags/composer-dataflow-dag.py' "1"
-section_close
-
 section_open "Waiting 10m for pipeline to finish"
     sleep 10m
+section_close
+
+section_open "Testing DAG file exists"
+    evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -c dags/composer-dataflow-dag.py' "1"
 section_close
 
 section_open "Testing BigQuery table populated"
