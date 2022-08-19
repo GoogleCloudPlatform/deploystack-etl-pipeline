@@ -1,0 +1,7 @@
+CONGRATS!!!!!!! 
+You have sucessfully built an ETL pipeline and processed your first batch of
+data.
+
+You can find your processed data in the BigQuery console 
+(http://console.cloud.google.com/bigquery) in the average_weather
+dataset.

@@ -1,0 +1,5 @@
+This process will create a batch ETL Pipeline which includes the following resources:
+    * A Google Cloud Storage bucket for landing source data
+    * A Dataflow job to perform transformations on the source data
+    * A BigQuery destination table to hold the transformed data 
+    * A Cloud Composer environment to orchestrate the ETL process
