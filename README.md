@@ -1,12 +1,15 @@
 # DeployStack - ETL Pipeline 
 
-<!-- TODO: Change this to match ETL Pipeline -->
-This is a simple solution that uses a Cloud Function to enforce Billing Budget constraints.
-Namely when you go over budget, any Compute Engine instance with a label of `costsentry`
-will be `stopped` by this system. It uses Pub/Sub to be the bridge between the Budget
-and Cloud Functions
+This architecture is for one data pipeline approach called 
+ETL— or extract, transform, load — which allows you to maximize flexibility 
+in how you transform your data while also providing dynamic scaling to 
+handle large amounts of incoming data and processing demands. 
+ 
+It uses Cloud Storage for landing data, Dataflow as a managed service 
+for processing data, BigQuery as a destination data warehouse, and 
+Cloud Composer, as an orchestration tool that helps you 
+author, schedule, and monitor data pipelines.
 
-<!-- TODO: Create architecture digram for app. -->
 ![ETL Pipeline architecture](/architecture.png)
 
 ## Install
