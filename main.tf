@@ -172,7 +172,6 @@ EOF
 }
 
 # Create Cloud Storage bucket and add files
-# need to update name
 resource "google_storage_bucket" "pipeline_files" {
   project       = var.project_number
   name          = "${var.basename}-${var.project_id}-files"
