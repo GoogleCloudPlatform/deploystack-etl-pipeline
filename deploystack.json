@@ -1,6 +1,8 @@
 {
   "title": "ETL PIPELINE",
+  "name": "etl-pipeline",
   "duration": 30,
+  "documentation_link": "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/etl-pipeline",
   "collect_project": true,
   "collect_region": true,
   "region_type": "compute",
