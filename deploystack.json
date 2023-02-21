@@ -4,6 +4,7 @@
   "duration": 30,
   "documentation_link": "https://cloud.google.com/shell/docs/cloud-shell-tutorials/deploystack/etl-pipeline",
   "collect_project": true,
+  "collect_project_number": true,
   "collect_region": true,
   "region_type": "compute",
   "region_default": "us-central1",
