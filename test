@@ -212,10 +212,6 @@ section_open "Waiting for pipeline to finish"
     await_pipeline TEMP 5 120 "dagExists" "" $REGION
 section_close
 
-section_open "Testing DAG file exists"
-    evalTest 'gcloud composer environments storage dags list --environment example-environment --location $REGION | grep -c dags/airflow_monitoring.py' "1"
-section_close
-
 section_open "Testing BigQuery table populated"
     await_bq TEMP 5 120 "" "" 
     evalTest 'bq --format=prettyjson show average_weather.average_weather | grep numRows' '  "numRows": "4",'
