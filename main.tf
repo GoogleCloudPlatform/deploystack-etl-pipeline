@@ -110,7 +110,7 @@ resource "google_composer_environment" "example" {
         AIRFLOW_VAR_PROJECT_ID  = var.project_id
         AIRFLOW_VAR_GCE_ZONE    = var.zone
         AIRFLOW_VAR_BUCKET_PATH = "gs://${var.basename}-${var.project_id}-files"
-        AIRFLOW_VAR_LOCATION = var.region
+        AIRFLOW_VAR_LOCATION    = var.region
       }
     }
     node_config {
