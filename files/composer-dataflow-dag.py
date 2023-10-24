@@ -35,6 +35,7 @@ from airflow.utils.dates import days_ago
 bucket_path = models.Variable.get("bucket_path")
 project_id = models.Variable.get("project_id")
 gce_zone = models.Variable.get("gce_zone")
+location = models.Variable.get("location")
 
 
 default_args = {
@@ -70,6 +71,7 @@ with models.DAG(
         # https://cloud.google.com/dataflow/docs/guides/templates/provided-batch#gcstexttobigquery
         template="gs://dataflow-templates/latest/GCS_Text_to_BigQuery",
         # Use the link above to specify the correct parameters for your template.
+        location=location,
         parameters={
             "javascriptTextTransformFunctionName": "transformCSVtoJSON",
             "JSONPath": bucket_path + "/jsonSchema.json",
